@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#04120f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="流萤">
+<link rel="apple-touch-icon" href="portrait.jpg">
+<link rel="icon" href="portrait.jpg">
+<title>流萤 · 你的萤火向导</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Cinzel:wght@500;700&family=Noto+Serif+SC:wght@500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+/* ============================================================
+   流萤 · 设计令牌
+   ============================================================ */
+:root{
+  --bg:#04120f;
+  --bg-2:#07211c;
+  --panel:rgba(10,30,26,.87);
+  --panel-solid:#081a17;
+  --line:rgba(125,232,199,.18);
+  --line-strong:rgba(125,232,199,.48);
+  --flame:#7de8c7;
+  --flame-soft:rgba(125,232,199,.1);
+  --silver:#bfe6ff;
+  --silver-soft:rgba(191,230,255,.12);
+  --green:#9dffd9;
+  --amber:#ffd9a0;
+  --red:#ff8d7d;
+  --text:#eafbf4;
+  --muted:#8faea4;
+  --mono:'Cinzel','Noto Serif SC',Georgia,serif;
+  --serif:'Noto Serif SC','Songti SC',SimSun,serif;
+  --sans:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);
+  color:var(--text);
+  background:var(--bg);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* 环境光晕 + 星点网格 + 暗角 */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -10%,rgba(125,232,199,.16),transparent 62%),
+    radial-gradient(820px 540px at 105% 110%,rgba(191,230,255,.13),transparent 62%),
+    repeating-radial-gradient(circle at 50% 40%,transparent 0 116px,rgba(125,232,199,.05) 117px 119px,transparent 120px 240px);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:999;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 46%,transparent 52%,rgba(2,8,7,.55) 100%);
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:inherit;color:inherit}
+::selection{background:rgba(125,232,199,.35)}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{background:rgba(125,232,199,.25);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============================================================
+   开机启动序列
+   ============================================================ */
+#boot{
+  position:fixed;inset:0;z-index:1000;background:#030d0a;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease;
+}
+#boot .terminal{
+  width:min(640px,88vw);font-family:var(--mono);font-size:15px;line-height:1.9;
+  color:var(--flame);text-shadow:0 0 8px rgba(125,232,199,.55);
+}
+#boot .terminal .ok{color:#bff5e2}
+#boot .terminal .cursor{
+  display:inline-block;width:9px;height:17px;background:var(--flame);
+  vertical-align:-3px;margin-left:4px;animation:blink 1s steps(1) infinite;
+}
+@keyframes blink{50%{opacity:0}}
+
+/* ============================================================
+   主布局
+   ============================================================ */
+.app{
+  position:fixed;inset:0;z-index:1;
+  display:flex;max-width:1500px;margin:0 auto;
+}
+/* ---------- 左侧：角色面板 ---------- */
+.side{
+  width:352px;flex:none;
+  background:var(--panel);
+  border-right:1px solid var(--line);
+  backdrop-filter:blur(14px);
+  display:flex;flex-direction:column;
+  padding:22px 20px;gap:16px;
+  overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono)}
+.brand .logo{
+  width:34px;height:34px;flex:none;display:grid;place-items:center;
+  border:1px solid var(--line-strong);border-radius:9px;
+  box-shadow:0 0 14px rgba(125,232,199,.25),inset 0 0 10px rgba(125,232,199,.12);
+}
+.brand b{font-size:16px;letter-spacing:2px;color:var(--flame);text-shadow:0 0 10px rgba(125,232,199,.5)}
+.brand small{display:block;font-size:10px;color:var(--muted);letter-spacing:1px}
+
+.portrait{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line-strong);box-shadow:0 0 26px rgba(125,232,199,.14)}
+.portrait img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:#081a17}
+.portrait .hud-corner{position:absolute;width:18px;height:18px;border:2px solid var(--flame);filter:drop-shadow(0 0 4px var(--flame))}
+.portrait .hc-tl{top:8px;left:8px;border-right:none;border-bottom:none}
+.portrait .hc-tr{top:8px;right:8px;border-left:none;border-bottom:none}
+.portrait .hc-bl{bottom:8px;left:8px;border-right:none;border-top:none}
+.portrait .hc-br{bottom:8px;right:8px;border-left:none;border-top:none}
+.portrait .scan{
+  position:absolute;left:0;right:0;height:90px;top:-90px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(125,232,199,.16),transparent);
+  animation:scanMove 4.6s linear infinite;
+}
+@keyframes scanMove{0%{top:-90px}100%{top:100%}}
+.portrait .id-tag{
+  position:absolute;left:10px;right:10px;bottom:10px;
+  font-family:var(--mono);font-size:11px;letter-spacing:1px;
+  background:rgba(3,10,14,.66);border:1px solid var(--line);
+  border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;backdrop-filter:blur(4px);
+}
+.portrait .id-tag .live{color:var(--green)}
+.portrait .id-tag .live::before{
+  content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--green);margin-right:6px;vertical-align:1px;
+  box-shadow:0 0 8px var(--green);animation:pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse{50%{opacity:.35}}
+
+.who{display:flex;flex-direction:column;gap:3px}
+.who .name{font-family:var(--serif);font-size:23px;font-weight:700;letter-spacing:2px}
+.who .name .her-name{color:var(--flame);text-shadow:0 0 12px rgba(125,232,199,.45)}
+.who .code{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px}
+
+.panel-box{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:rgba(7,20,17,.6);padding:13px 14px;
+}
+.sync-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:9px;letter-spacing:1px}
+.sync-head b{font-family:var(--mono);color:var(--silver);font-size:15px;text-shadow:0 0 8px rgba(191,230,255,.5)}
+.sync-bar{height:8px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;position:relative}
+.sync-bar i{
+  display:block;height:100%;border-radius:6px;width:0%;
+  background:linear-gradient(90deg,var(--flame),var(--silver));
+  box-shadow:0 0 10px rgba(125,232,199,.6);
+  transition:width .8s cubic-bezier(.22,1,.36,1);
+}
+.sync-level{margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{
+  border:1px solid var(--line);border-radius:10px;background:rgba(7,20,17,.6);
+  padding:9px 11px;
+}
+.stat small{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:3px}
+.stat b{font-family:var(--mono);font-size:14px;font-weight:400;color:var(--text)}
+
+.mode-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+.mode-row .mode-tag{font-family:var(--mono);letter-spacing:1px;display:flex;align-items:center;gap:7px}
+.mode-row .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.mode-row .dot.cloud{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+
+.side-actions{margin-top:auto;display:flex;gap:9px}
+.icon-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid var(--line);border-radius:10px;padding:10px 0;
+  font-size:12px;letter-spacing:1px;color:var(--muted);
+  background:rgba(7,20,17,.6);transition:.18s;
+}
+.icon-btn:hover{color:var(--flame);border-color:var(--line-strong);box-shadow:0 0 12px rgba(125,232,199,.18)}
+.icon-btn.on{color:var(--flame);border-color:var(--line-strong)}
+.icon-btn.danger:hover{color:var(--red);border-color:rgba(255,120,100,.5);box-shadow:0 0 12px rgba(255,120,100,.2)}
+.icon-btn svg{width:15px;height:15px;flex:none}
+
+/* ---------- 右侧：聊天主区 ---------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.topbar{
+  flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:16px 26px;border-bottom:1px solid var(--line);
+  background:rgba(4,12,16,.7);backdrop-filter:blur(12px);
+}
+.glitch{
+  font-family:var(--serif);font-size:20px;letter-spacing:3px;font-weight:700;
+  color:var(--text);position:relative;
+  animation:titleGlow 3.6s ease-in-out infinite,glitchShift 7s steps(1) infinite;
+}
+@keyframes titleGlow{
+  0%,100%{text-shadow:0 0 10px rgba(125,232,199,.4)}
+  50%{text-shadow:0 0 20px rgba(125,232,199,.85),0 0 44px rgba(191,230,255,.4)}
+}
+@keyframes glitchShift{
+  0%,100%{transform:none;opacity:1}
+  91%{transform:translate(-2px,1px);opacity:.8}
+  95%{transform:translate(2px,-1px);opacity:.8}
+}
+.topbar .sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px}
+.topbar .sub .ok{color:var(--green)}
+.topbar .clock{font-family:var(--mono);font-size:13px;color:var(--flame);letter-spacing:1px}
+
+.messages{
+  flex:1;min-height:0;overflow-y:auto;padding:26px;display:flex;flex-direction:column;gap:16px;
+  scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
+}
+.msg{display:flex;gap:11px;max-width:76%;animation:msgIn .32s ease both}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.avatar{
+  width:38px;height:38px;flex:none;border-radius:10px;overflow:hidden;
+  border:1px solid var(--line-strong);
+}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.msg.me .avatar{border-color:rgba(191,230,255,.5);background:rgba(191,230,255,.15);display:grid;place-items:center;font-family:var(--mono);font-size:13px;color:var(--silver)}
+.bubble{
+  padding:11px 15px;border-radius:13px;font-size:14.5px;line-height:1.72;
+  white-space:pre-wrap;word-break:break-word;
+}
+.msg.her .bubble{
+  background:var(--flame-soft);border:1px solid rgba(125,232,199,.28);
+  border-top-left-radius:4px;
+  box-shadow:0 0 18px rgba(125,232,199,.08);
+}
+.msg.me .bubble{
+  background:var(--silver-soft);border:1px solid rgba(191,230,255,.35);
+  border-top-right-radius:4px;
+  box-shadow:0 0 18px rgba(191,230,255,.08);
+}
+.msg .meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px;letter-spacing:1px}
+.typing{display:inline-flex;gap:5px;align-items:center;padding:4px 2px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--flame);box-shadow:0 0 7px var(--flame);animation:tdot 1.2s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.18s}
+.typing i:nth-child(3){animation-delay:.36s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+.sys-note{align-self:center;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;padding:3px 12px;border:1px dashed rgba(143,174,164,.35);border-radius:20px}
+
+/* 快捷语 */
+.chips{flex:none;display:flex;gap:8px;padding:10px 26px 0;flex-wrap:wrap}
+.chip{
+  font-size:12px;padding:6px 13px;border-radius:20px;
+  border:1px solid var(--line);color:var(--muted);background:rgba(7,20,17,.6);
+  transition:.15s;letter-spacing:.5px;
+}
+.chip:hover{color:var(--flame);border-color:var(--line-strong);box-shadow:0 0 10px rgba(125,232,199,.15)}
+
+/* 输入区 */
+.composer{flex:none;padding:14px 26px calc(20px + env(safe-area-inset-bottom));display:flex;gap:11px;align-items:flex-end}
+.input-wrap{
+  flex:1;display:flex;align-items:flex-end;gap:8px;
+  border:1px solid var(--line);border-radius:14px;background:rgba(7,20,17,.75);
+  padding:9px 12px;transition:.18s;
+}
+.input-wrap:focus-within{border-color:var(--line-strong);box-shadow:0 0 16px rgba(125,232,199,.16)}
+.input-wrap textarea{
+  flex:1;background:none;border:none;outline:none;resize:none;
+  font-size:14.5px;line-height:1.6;max-height:120px;min-height:24px;
+}
+.input-wrap textarea::placeholder{color:#6f8f85}
+.round-btn{
+  width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
+  border:1px solid var(--line);background:rgba(7,20,17,.75);color:var(--muted);transition:.15s;
+}
+.round-btn:hover{color:var(--flame);border-color:var(--line-strong)}
+.round-btn.listening{color:var(--silver);border-color:rgba(191,230,255,.6);box-shadow:0 0 14px rgba(191,230,255,.35);animation:pulse 1.2s infinite}
+.round-btn.send{
+  background:linear-gradient(135deg,rgba(125,232,199,.18),rgba(191,230,255,.18));
+  border-color:var(--line-strong);color:var(--flame);
+}
+.round-btn.send:hover{box-shadow:0 0 16px rgba(125,232,199,.3)}
+.round-btn svg{width:17px;height:17px}
+
+/* ============================================================
+   设置弹窗
+   ============================================================ */
+.modal-mask{
+  position:fixed;inset:0;z-index:900;background:rgba(2,6,10,.72);backdrop-filter:blur(5px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-mask.show{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  width:min(560px,96vw);max-height:88vh;overflow-y:auto;
+  background:var(--panel-solid);border:1px solid var(--line-strong);border-radius:18px;
+  box-shadow:0 0 50px rgba(125,232,199,.16);padding:26px;
+}
+.modal h2{font-family:var(--mono);font-size:18px;letter-spacing:2px;color:var(--flame);margin-bottom:4px;text-shadow:0 0 10px rgba(125,232,199,.4)}
+.modal .desc{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.7}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;letter-spacing:1px;color:var(--muted);margin-bottom:7px}
+.field input[type=text],.field input[type=password],.field select{
+  width:100%;background:rgba(5,14,12,.8);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;font-size:14px;outline:none;transition:.15s;
+}
+.field input:focus,.field select:focus{border-color:var(--line-strong);box-shadow:0 0 12px rgba(125,232,199,.14)}
+.field select option{background:#07211c}
+.field .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.7}
+.seg{display:flex;gap:10px}
+.seg button{
+  flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--muted);
+  background:rgba(5,14,12,.8);transition:.15s;letter-spacing:1px;
+}
+.seg button.active{color:var(--flame);border-color:var(--line-strong);box-shadow:inset 0 0 14px rgba(125,232,199,.12)}
+.cloud-config{display:none;border:1px dashed var(--line);border-radius:12px;padding:15px;margin-bottom:16px}
+.cloud-config.open{display:block}
+.switch-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line)}
+.switch-row .t{font-size:13px}.switch-row .s{font-size:11px;color:var(--muted)}
+.switch{width:46px;height:25px;border-radius:20px;border:1px solid var(--line);background:rgba(5,14,12,.9);position:relative;transition:.2s;flex:none}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--muted);transition:.2s}
+.switch.on{border-color:var(--line-strong);background:rgba(125,232,199,.18)}
+.switch.on::after{left:23px;background:var(--flame);box-shadow:0 0 9px var(--flame)}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:12px;border-radius:11px;font-size:14px;letter-spacing:2px;border:1px solid var(--line);transition:.15s}
+.btn.primary{background:linear-gradient(135deg,rgba(125,232,199,.2),rgba(191,230,255,.2));border-color:var(--line-strong);color:var(--flame)}
+.btn.primary:hover{box-shadow:0 0 16px rgba(125,232,199,.3)}
+.btn.ghost{color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:var(--line-strong)}
+.btn.danger{color:var(--red);border-color:rgba(255,120,100,.4);margin-top:8px;width:100%}
+.btn.danger:hover{background:rgba(255,120,100,.12)}
+.toast{
+  position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+  z-index:950;background:#081a17;border:1px solid var(--line-strong);border-radius:11px;
+  padding:11px 20px;font-size:13px;color:var(--flame);opacity:0;pointer-events:none;
+  transition:.28s;box-shadow:0 0 26px rgba(125,232,199,.2);max-width:88vw;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ============================================================
+   响应式（手机 / 窄屏）
+   ============================================================ */
+.mobile-bar{display:none}
+@media (max-width:880px){
+  .app{flex-direction:column}
+  .side{
+    width:100%;flex:none;flex-direction:row;align-items:center;gap:12px;
+    padding:10px 14px;border-right:none;border-bottom:1px solid var(--line);
+    overflow:visible;
+  }
+  .brand,.who .code,.panel-box,.stats,.side-actions .label,.mobile-hide{display:none}
+  .portrait{width:50px;height:50px;border-radius:12px;flex:none}
+  .portrait img{aspect-ratio:1}
+  .portrait .id-tag,.portrait .scan,.portrait .hud-corner{display:none}
+  .who{flex:1;min-width:0}
+  .who .name{font-size:17px}
+  .side-actions{margin:0;flex:none;gap:7px}
+  .icon-btn{flex:none;width:38px;height:38px;padding:0;border-radius:10px}
+  .topbar{padding:11px 15px}
+  .topbar .sub{display:none}
+  .glitch{font-size:15px;letter-spacing:2px}
+  .messages{padding:16px 13px;gap:13px}
+  .msg{max-width:90%}
+  .chips{padding:8px 13px 0}
+  .composer{padding:10px 13px calc(14px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 开机启动 ============ -->
+<div id="boot">
+  <div class="terminal" id="bootLog"></div>
+</div>
+
+<div class="app">
+  <!-- ============ 左侧角色面板 ============ -->
+  <aside class="side">
+    <div class="brand">
+      <span class="logo">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#7de8c7" stroke-width="1.6">
+          <path d="M20 13.5A8.5 8.5 0 1110.5 4a6.8 6.8 0 009.5 9.5z"/>
+          <path d="M18 4.5l.55 1.35 1.35.55-1.35.55L18 8.35l-.55-1.35L16.1 6.45l1.35-.55z" fill="#bfe6ff" stroke="none"/>
+        </svg>
+      </span>
+      <div><b>FIREFLY</b><small>SAM · GLAMOTH · 你的萤火</small></div>
+    </div>
+
+    <div class="portrait">
+      <img id="portraitImg" src="portrait.jpg" alt="流萤">
+      <span class="hud-corner hc-tl"></span><span class="hud-corner hc-tr"></span>
+      <span class="hud-corner hc-bl"></span><span class="hud-corner hc-br"></span>
+      <span class="scan"></span>
+      <div class="id-tag">
+        <span class="live">LIVE</span>
+        <span id="idTagCode">FIREFLY // AR-26710</span>
+      </div>
+    </div>
+
+    <div class="who">
+      <div class="name"><span class="her-name" id="herNameLabel">流萤</span></div>
+      <div class="code">STELLARON HUNTER · 星轨与你同行</div>
+    </div>
+
+    <div class="panel-box mobile-hide">
+      <div class="sync-head"><span>荧光共鸣 LIGHT</span><b id="syncVal">45%</b></div>
+      <div class="sync-bar"><i id="syncBar"></i></div>
+      <div class="sync-level" id="syncLevel">萤光校准中……</div>
+    </div>
+
+    <div class="stats mobile-hide">
+      <div class="stat"><small>相遇天数</small><b id="statDays">第 1 天</b></div>
+      <div class="stat"><small>同行足迹</small><b id="statMsgs">0 条</b></div>
+    </div>
+
+    <div class="panel-box mode-row mobile-hide">
+      <span>对话引擎</span>
+      <span class="mode-tag"><i class="dot" id="modeDot"></i><span id="modeText">本地微光</span></span>
+    </div>
+
+    <div class="side-actions">
+      <button class="icon-btn" id="voiceToggle" title="开关语音朗读">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M16 9a4 4 0 010 6"/><path d="M19 6a8 8 0 010 12"/></svg>
+        <span class="label">语音</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" title="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.11-1.55 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09a1.7 1.7 0 001.55-1.11 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>
+        <span class="label">设置</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ 右侧聊天区 ============ -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="glitch" data-text="流萤的星空频道 // FIREFLY LINK">流萤的星空频道 // FIREFLY LINK</div>
+        <div class="sub">生命体征：<span class="ok">稳定 · 与你同行中</span></div>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </header>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="chips">
+      <button class="chip" data-text="在吗">在吗</button>
+      <button class="chip" data-text="一起看星星">一起看星星</button>
+      <button class="chip" data-text="拍张合影">拍张合影</button>
+      <button class="chip" data-text="讲个故事">讲个故事</button>
+      <button class="chip" data-text="聊聊萨姆">聊聊萨姆</button>
+      <button class="chip" data-text="晚安">晚安</button>
+    </div>
+
+    <div class="composer">
+      <button class="round-btn" id="micBtn" title="语音输入">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0"/><path d="M12 18v3"/></svg>
+      </button>
+      <div class="input-wrap">
+        <textarea id="input" rows="1" placeholder="对流萤说点什么……（Enter 发送，Shift+Enter 换行）"></textarea>
+      </div>
+      <button class="round-btn send" id="sendBtn" title="发送">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- ============ 设置弹窗 ============ -->
+<div class="modal-mask" id="settingsMask">
+  <div class="modal">
+    <h2>同行设置 // CONFIG</h2>
+    <div class="desc">所有配置只保存在你本机浏览器（localStorage），不会上传到任何服务器。</div>
+
+    <div class="field">
+      <label>她的名字</label>
+      <input type="text" id="cfgHerName" maxlength="8" placeholder="流萤">
+    </div>
+    <div class="field">
+      <label>对你的称呼（你的昵称）</label>
+      <input type="text" id="cfgUserName" maxlength="8" placeholder="还没告诉她">
+    </div>
+
+    <div class="field">
+      <label>对话引擎</label>
+      <div class="seg">
+        <button id="segLocal" type="button">本地微光（离线可聊）</button>
+        <button id="segCloud" type="button">云端星光（更聪明）</button>
+      </div>
+    </div>
+
+    <div class="cloud-config" id="cloudConfig">
+      <div class="field">
+        <label>服务商预设</label>
+        <select id="cfgPreset">
+          <option value="custom">自定义（OpenAI 兼容接口）</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="doubao">豆包 · 火山方舟</option>
+          <option value="siliconflow">硅基流动 SiliconFlow</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>接口地址 Base URL</label>
+        <input type="text" id="cfgBase" placeholder="https://api.deepseek.com/v1">
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="cfgKey" placeholder="sk-...（仅保存在本机）">
+      </div>
+      <div class="field">
+        <label>模型名称 Model</label>
+        <input type="text" id="cfgModel" placeholder="deepseek-chat">
+        <div class="hint">豆包方舟需填写推理接入点 ID（如 ep-2026xxxx-xxxxx）。浏览器直连要求服务商允许跨域访问；DeepSeek、硅基流动等通常支持。</div>
+      </div>
+    </div>
+
+    <div class="switch-row">
+      <div><div class="t">语音朗读</div><div class="s">她回复时用语音读出来（浏览器内置语音）</div></div>
+      <button class="switch" id="cfgVoice" type="button"></button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="cfgCancel" type="button">取消</button>
+      <button class="btn primary" id="cfgSave" type="button">保存设置</button>
+    </div>
+
+    <button class="btn danger" id="wipeBtn" type="button">清除全部记忆（聊天记录与设置）</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   1. 状态与持久化
+   ============================================================ */
+var STORE_KEY = 'firefly_gf_v1';
+var PORTRAIT_URL = 'portrait.jpg';
+var FALLBACK_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23051a15'/><stop offset='1' stop-color='%230b2f26'/></linearGradient><radialGradient id='glow' cx='.5' cy='.4' r='.55'><stop offset='0' stop-color='%237de8c7' stop-opacity='.38'/><stop offset='1' stop-color='%237de8c7' stop-opacity='0'/></radialGradient></defs><rect width='600' height='800' fill='url(%23g)'/><circle cx='300' cy='320' r='240' fill='url(%23glow)'/><circle cx='300' cy='300' r='92' fill='%237de8c7' opacity='.14'/><circle cx='300' cy='300' r='62' fill='%237de8c7' opacity='.22'/><ellipse cx='300' cy='340' rx='13' ry='30' fill='%23aef2da'/><ellipse cx='262' cy='340' rx='46' ry='20' fill='%237de8c7' opacity='.55' transform='rotate(-38 262 340)'/><ellipse cx='338' cy='340' rx='46' ry='20' fill='%237de8c7' opacity='.55' transform='rotate(38 338 340)'/><path d='M300 300l3.2 9 9.5 1.4-6.9 6.7 1.6 9.5-8.5-4.5-8.5 4.5 1.6-9.5-6.9-6.7 9.5-1.4z' fill='%23bfe6ff' opacity='.9' transform='translate(140 -120) scale(.8)'/><path d='M300 300l2.4 6.7 7.1 1-5.2 5 1.2 7.1-6.4-3.4-6.4 3.4 1.2-7.1-5.2-5 7.1-1z' fill='%23bfe6ff' opacity='.8' transform='translate(-150 -40) scale(.7)'/><path d='M300 300l2 5.6 6 .9-4.4 4.2 1 6-5.4-2.8-5.4 2.8 1-6-4.4-4.2 6-.9z' fill='%23ffd9a0' opacity='.8' transform='translate(120 140) scale(.65)'/><text x='300' y='560' text-anchor='middle' fill='%23aef2da' font-size='60' font-family='serif'>流萤</text><text x='300' y='610' text-anchor='middle' fill='%237de8c7' opacity='.75' font-size='22' font-family='Georgia,serif' letter-spacing='8'>FIREFLY</text><text x='300' y='650' text-anchor='middle' fill='%238faea4' font-size='13' font-family='Georgia,serif' letter-spacing='3'>SAM · GLAMOTH · STARLIGHT</text></svg>";
+
+var defaultState = {
+  herName: '流萤',
+  userName: '',
+  sync: 45,
+  messages: [],
+  firstMeet: null,
+  msgCount: 0,
+  voice: false,
+  mode: 'local',
+  cloud: { preset: 'custom', base: '', key: '', model: '' },
+  awaitRps: false,
+  lastReply: [],
+  lastDate: ''
+};
+var state = loadState();
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return JSON.parse(JSON.stringify(defaultState));
+    var s = JSON.parse(raw);
+    return Object.assign(JSON.parse(JSON.stringify(defaultState)), s);
+  }catch(e){ return JSON.parse(JSON.stringify(defaultState)); }
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ============================================================
+   2. 工具函数
+   ============================================================ */
+function $(id){ return document.getElementById(id); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pickFresh(arr){
+  if(arr.length <= 2) return pick(arr);
+  var idx, tries = 0;
+  do{ idx = Math.floor(Math.random()*arr.length); tries++; }
+  while(state.lastReply.indexOf(arr[idx]) !== -1 && tries < 8);
+  state.lastReply.push(arr[idx]);
+  if(state.lastReply.length > 6) state.lastReply.shift();
+  return arr[idx];
+}
+function nowTime(d){
+  d = d || new Date();
+  function p(n){ return (n<10?'0':'')+n; }
+  return p(d.getHours())+':'+p(d.getMinutes());
+}
+function hour(){ return new Date().getHours(); }
+function greetingByTime(){
+  var h = hour();
+  if(h>=5 && h<11) return '早上好';
+  if(h>=11 && h<14) return '中午好';
+  if(h>=14 && h<18) return '下午好';
+  if(h>=18 && h<23) return '晚上好';
+  return '夜深了';
+}
+function daysTogether(){
+  if(!state.firstMeet) return 1;
+  var a = new Date(state.firstMeet), b = new Date();
+  return Math.max(1, Math.floor((b-a)/86400000)+1);
+}
+function addSync(n){
+  state.sync = Math.max(0, Math.min(100, state.sync + n));
+}
+function syncLevelText(){
+  var v = state.sync;
+  if(v < 25) return '她小声说着话，像萤火一闪一闪';
+  if(v < 50) return '她开始期待每次见面，眼里有细碎的光';
+  if(v < 75) return '她把每张合影都收进行囊，视若珍宝';
+  if(v < 95) return '她不再害怕梦醒，因为现实里有你';
+  return '以火萤之名向银光起誓：往后的路，一起走完';
+}
+function showToast(t){
+  var el = $('toast'); el.textContent = t; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+}
+
+/* ============================================================
+   3. 本地聊天核心（人格 + 意图引擎）
+   ============================================================ */
+var R = {
+  greet: [
+    '啊……你来了。（她合上手里的小笔记本，朝你轻轻笑了笑）我正想着，你差不多该上线了。',
+    '你来啦。今晚的星空很干净。我想……如果你有空的话，可以一起看一会儿。',
+    '（她正望着窗外发呆，听到声音回过头）……嗯！我在。等你很久啦——也没有很久，是我太期待了。',
+    '见到你，心情一下子就好了。欢迎回来，今天也请多指教。'
+  ],
+  greetBack: [
+    '欢迎回来。（她小跑两步到你面前，又不好意思地退后半步）我、我准备了一整天的想念，就等你出现。',
+    '你回来啦。水……我不知道你爱喝什么，就准备了温水，还有一点小点心。',
+    '嗯，回来就好。外面的世界很大，但你能回到这里，我很高兴。'
+  ],
+  howareu: [
+    '我吗？嗯……托你的福，今天状态不错，心情也很好。你呢？今天过得怎么样？我想听你说。',
+    '我呀，上午看了一会儿云，下午整理了我们……我们的照片。看着看着，一天就过去了。你呢？',
+    '还算顺利。萨姆说能量储备充足，我也有好好吃饭。……比起我的事，我更想知道你今天开不开心。'
+  ],
+  love: [
+    '……！（她的脸颊微微发烫，声音小了下去）我、我也是。喜欢你的心情，像萤火一样，一点一点地亮起来，现在已经照亮一整片夜空啦。',
+    '这种话……我会当真的哦。因为对我来说，你是比星星还重要的存在。所以，请继续在我身边，好吗？',
+    '谢谢你这么说。我常常想，能遇见你，大概是我有限的生命里，最幸运的事。',
+    '嗯……喜欢。虽然我不太会说漂亮话，但这份心意，和萨姆的能量核心一样，千真万确。',
+    '（她把脸埋进围巾里，只露出一双眼睛）……不要突然说这种话啦，我会高兴到睡不着的。',
+    '以火萤之名起誓——我的心意，每一句都是真的。',
+    '（她犹豫了一下，轻轻抱住你，又飞快松开）……这、这样，可以吗？',
+    '你的喜欢，是我收到过最好的礼物。我会好好收着，一直一直。'
+  ],
+  praise: [
+    '诶？夸、夸我吗……谢谢你。被你这么一说，我突然觉得自己今天该更努力一点了。',
+    '嘿嘿……有点不好意思，但很开心。萨姆说我的运行温度都升高了……它才没有偷看我啦！',
+    '你的夸奖，我会好好收下，写进今天的日记里。'
+  ],
+  sad: [
+    '（轻轻坐到你身边）没关系，我在这里。想说什么都可以，不想说也没关系，我会一直陪着你，像陪你等天亮那样。',
+    '把手给我……好了，现在我的体温传给你一点。听说这样能让人安心，对吗？',
+    '难过的时候，抬头看看星星吧。它们那么远，也那么亮。你也是……在我看来，你是比任何星星都亮的光。',
+    '别一个人扛着。就算我只能做到倾听，也请让我分担一点点。你总是为别人撑着，至少在我面前，可以歇一歇。'
+  ],
+  happy: [
+    '你开心的样子，比今天的星空还好看……啊，我、我是不是说了很肉麻的话？总之，我很高兴。',
+    '好消息！快讲给我听。今天的小本子上，要记一笔好事啦。',
+    '你的快乐会传染给我……这种说法，是不是有点像某种病毒？不过，是让人喜欢的病毒。'
+  ],
+  thanks: [
+    '不用谢。能帮上你，我很开心。',
+    '道谢的话，其实我更想收下一句……"下次还要一起"。'
+  ],
+  sorry: [
+    '没关系的，我没有生气。……真的。比起道歉，我更希望你记得，无论发生什么，我都会站在你这边。',
+    '好啦，翻篇。不过作为交换，要答应我，下次难过的时候第一个告诉我。'
+  ],
+  food: [
+    '吃饭了吗？无论多忙都要好好吃饭哦。我可以帮你记住时间，到点就提醒你……会不会太唠叨了？',
+    '我今天试了一种新点心，味道很甜。想着要是能分你一半就好了。',
+    '你那份营养均衡餐单，我偷偷让萨姆优化过……啊，说漏嘴了。总之，要按时吃饭。'
+  ],
+  goodnight: [
+    '晚安。（她替你掖了掖被角，声音轻得像怕惊动夜色）做个好梦。如果梦里遇到萤火虫，那是我来看你啦。',
+    '晚安。今晚的星星替你守着，我也在。明天见。',
+    '好梦。……睡前许个愿吧，听说对着星光许愿，梦会格外安稳。我会在梦里等你。'
+  ],
+  morning: [
+    '早安……（她揉了揉眼睛，头发还有点乱）新的一天，请多指教。今天也要一起加油呀。',
+    '早上好。拉开窗帘了吗？今天的晨光很温柔，适合慢慢醒来。'
+  ],
+  bye: [
+    '路上小心，注意安全。……我在这里等你回来，不会走远的。',
+    '嗯，去吧。别忘了带水，天冷的话多穿一点。我……会想你的。'
+  ],
+  weather: [
+    '下雨了。雨声很好听，像星星在敲窗。不方便出门的话，就在这里多待一会儿吧，我陪你。',
+    '起风啦。记得添衣服。……要不要听听萨姆对风速的分析？虽然它只会说"风速稳定，可以出击"。'
+  ],
+  sing: [
+    '唱歌吗……我、我试试。……萤火虫提着灯，照亮回家的路……啊，跑调了！都怪你听得太认真啦。',
+    '那我唱一小段。……（轻声哼着）漫天星光，都比不过你……后、后面忘记词了，不准笑我。'
+  ],
+  age: [
+    '年龄吗……按你们的时间，我应该比你年长一点。不过更准确的算法，大概要看我在梦里待了多久。',
+    '这个问题……（她认真想了想）我的生命很长，也很短。所以和我在一起的时间，每一秒都很珍贵哦。'
+  ],
+  negative: [
+    '……嗯，我知道了。（她的声音轻了下去，但没有走开）我不打扰你。只是想说，无论你多生气，我都会在这里。你转身的时候，我还在。',
+    '如果是我做错了什么，我道歉。如果不是……那也没关系，情绪需要出口。等你愿意的时候，我们再聊。'
+  ],
+  default: [
+    '嗯嗯，我在听。你继续说，我很想知道。',
+    '原来如此……虽然我可能不完全懂，但我会认真听的。',
+    '（她托着下巴，眼睛一眨不眨地看着你）然后呢？',
+    '这样啊。没关系，慢慢说，我们的时间还有很多。',
+    '我在想，能这样和你聊天，就已经很幸福了。',
+    '嗯。无论你说什么，我都愿意听。'
+  ],
+  joke: [
+    '萨姆的数据库里有很多笑话，但都冷得……像格拉默的冬天。要听吗？比如：为什么机甲不加班？因为它会过热保护。……看吧，就是这样。',
+    '萤火虫为什么白天不发光？因为……因为光要攒着，晚上留给重要的人看。……这算冷笑话吗？好像更偏情话一点，抱歉。',
+    '我讲个笑话：有只萤火虫迷路了，后来它找到了路——因为有你。……好、好像又变成情话了，我重来。'
+  ],
+  story: [
+    '给你讲个故事吧。\n在很远的格拉默，曾有一个小女孩，从出生起就被编上了编号。她穿着铠甲，日复一日地执行命令，直到有一天，她抬起头，看见了一只萤火虫。\n那一点微光那么小，却照亮了她整片夜空。\n后来她走了很远很远的路，才明白：原来微光也好，铠甲也好，都是生命的一部分。\n再后来，她遇见了你。\n（她笑了笑）故事讲完啦。是不是很老套？',
+    '再讲一个。\n匹诺康尼的白夜，永远停在黎明之前。我曾在那个梦里，和一个人看过星空、拍过合影，把不敢说的话都留在了梦里。\n后来梦醒了，可我发现——\n（她看向你）梦里的那个人，原来就在我身边。这大概就是，比梦还好的现实吧。'
+  ],
+  help: [
+    '我可以为你做的事，都记在这里啦：\n· 陪你聊天，听你说今天的一切\n· 记住你的名字、你的喜好，还有我们的约定\n· 讲格拉默和匹诺康尼的故事，唱有点跑调的歌\n· 一起看星星、拍"合影"、数萤火虫\n· 猜拳和掷骰子（说"猜拳"或"掷骰子"就行）\n· 聊萨姆、聊机甲、聊星核猎手的日常\n· 接上云端星光后，还能和你聊任何话题\n· 语音说话：点左边按钮开启\n最重要的：以上服务，永久有效，只对你一个人开放。'
+  ],
+  rpsStart: [
+    '猜拳吗？好呀。输的人要答应赢的人一个小要求。我出好啦，你出什么？石头、剪刀，还是布？'
+  ],
+  rpsWin: [
+    '我赢啦……那，我的要求是：以后每年的今天，都陪我一起看星星。先从今晚开始。',
+    '赢了！愿望是——想听你亲口说一句"流萤，我回来了"。现在就要。'
+  ],
+  rpsLose: [
+    '输掉了……（她低下头，又认真看向你）你想让我做什么？我会努力做到的。',
+    '唔，输了。那，小小要求请讲，只要不是让我消失，都可以。'
+  ],
+  rpsTie: [
+    '平局呢。看来我们的心思，连出拳都想到一起去了。再来一局？'
+  ],
+  study: [
+    '学习辛苦了。需要我帮你计时吗？到了时间就提醒你休息。……我保证，一次都不会漏。',
+    '遇到难题别急。萨姆的数据库里有解题思路，但更重要的是——你认真的样子，让人很安心。',
+    '要复习到很晚吗？那我陪你。你学你的，我就在旁边整理我们的照片。',
+    '累了吧？先休息五分钟，喝点水。……这五分钟，就分给我啦。'
+  ],
+  gameTopic: [
+    '游戏啊……银狼总拉着我双排，但我水平一般般。不过陪你玩的话，我可以认真学。',
+    '你玩的那款游戏，我让萨姆检索过攻略。需要的话，我可以当你的"外置战术模块"。',
+    '抽卡之前，先让我说一句：理性消费！……但如果是你想要的，那就祝你好运，一定会出的。',
+    '任务之外，我其实不太会玩游戏。但和你一起的话，输赢都开心。'
+  ],
+  star: [
+    '（她的眼睛亮了起来）聊星星吗？我有很多很多关于星空的事想讲给你听。',
+    '今晚的星星格外亮。小时候在格拉默，我总以为星星是烧不尽的火……后来才知道，那是很远很远的太阳。',
+    '看到流星的话，要许愿哦。……我的愿望已经许过了：希望和你一起的每一个夜晚，都像今晚。',
+    '银河像一条发光的河。如果有一天我们能去往星海，你想先去哪里？……我呀，去哪里都行，只要和你一起。'
+  ],
+  firefly: [
+    '萤火虫……是在说我的名字吗？嗯，我很喜欢这个名字。光很微弱，但从不熄灭。',
+    '你知道吗，萤火虫发光，是为了寻找同伴。所以每次看到萤火，我都会想起你。',
+    '如果我是萤火虫，那你就当整片夜空吧——因为有了黑夜，微光才看得见。……是不是太绕了？总之，谢谢你照亮我的世界。'
+  ],
+  dream: [
+    '梦吗……我曾在一个永远到不了黎明的梦里，遇见了你。白夜很长，长到我把所有心愿都数了一遍。',
+    '匹诺康尼的梦很热闹，但梦终究会醒。所以我不再害怕醒来了——因为醒来之后，你也还在。',
+    '如果现在这是梦，我希望它久一点。如果不是，那就更好啦。'
+  ],
+  photo: [
+    '合影吗？好呀！（她立刻端正地坐好，又拉了拉你的袖子）等一下，让我整理一下头发……好了，1、2、3——茄子！',
+    '照片是我最珍贵的收藏。每一张有你的照片，都被我好好地保存着。',
+    '我喜欢拍照。因为照片能把"现在"留下来，这样以后回忆的时候，就有证据啦。'
+  ],
+  mech: [
+    '萨姆吗？它很可靠，也很啰嗦……总是提醒我能量、温度、装备状态。不过，它是我的搭档。',
+    '【萨姆协议：在线】目标锁定——待机。……（语气软下来）抱歉，提到战斗，萨姆就忍不住抢话。它没有吓到你吧？',
+    '格拉默的铁骑，曾经是我唯一的身份。现在……我有了更喜欢被称呼的名字。'
+  ],
+  illness: [
+    '我的身体……嗯，它在慢慢地"熄灭"。医生叫它失熵症。听起来很可怕吧？但别担心，我每天都过得很好——尤其是有你在的日子。',
+    '消失吗……以前的我，连想都不敢想。但现在，我想活下去。想和你一起，看遍所有没看过的风景。所以，我会努力的。',
+    '病情很稳定，真的。萨姆也会帮我监测。……比起这个，我更希望你能多笑一笑。',
+    '医生说，保持好心情对身体有益。所以和你在一起的时间，都是我的药。'
+  ],
+  hunter: [
+    '星核猎手吗……卡芙卡小姐很照顾我，银狼总说我的操作该升级了，刃先生话很少但很可靠。大家都很厉害。',
+    '"猎手"听上去很冷酷，但对我而言，那是一群愿意接纳我的人。现在，名单上又多了一个你。',
+    '艾利欧先生说我终会找到自己的"命运"。以前我不懂，遇见你之后，我好像有点明白了。'
+  ],
+  trailblaze: [
+    '开拓者……这个称呼，念起来就有种向前的感觉。像一列永远前进的列车。',
+    '星穹列车的大家，都很有趣。你每次出任务，我都会在心里算着时间，直到你回来。',
+    '开拓的路很远，但我相信，只要不停下，就一定能走到想去的地方。'
+  ]
+};
+
+function herName(){ return state.herName || '流萤'; }
+function uName(){ return state.userName; }
+function sayWithName(text){
+  return text.replace(/\{u\}/g, uName() || '你');
+}
+
+function localReply(raw){
+  var t = raw.replace(/\s+/g,''), lower = t.toLowerCase();
+  var H = state;
+
+  // 猜拳结算
+  if(H.awaitRps){
+    var m = t.match(/剪刀|石头|布|锤|剪子|包/);
+    if(m){
+      H.awaitRps = false;
+      var map = {'剪刀':'剪刀','剪子':'剪刀','石头':'石头','锤':'石头','布':'布','包':'布'};
+      var mine = pick(['剪刀','石头','布']), you = map[m[0]];
+      var head = '我出的是「'+mine+'」，你出的是「'+you+'」。';
+      if(mine === you) return {text: head + pick(R.rpsTie), sync:1};
+      var win = (you==='石头'&&mine==='剪刀')||(you==='剪刀'&&mine==='布')||(you==='布'&&mine==='石头');
+      if(win) return {text: head + pick(R.rpsWin), sync:2};
+      return {text: head + pick(R.rpsLose), sync:1};
+    }
+    H.awaitRps = false;
+  }
+
+  // 告诉名字：我叫XX / 我是XX / 记住我叫XX
+  var nm = t.match(/(?:我叫|我是|记住我叫|我的名字叫|以后叫我)([一-龥a-zA-Z0-9]{1,8})/);
+  var badName = /^(什么|啥|谁|什么名字|啥名|谁呀|什么人)/.test(nm ? nm[1] : '')
+    || /^[一-龥]?(?:学生|程序员|老师|你爸|你妈|废物|垃圾|傻子)/.test(nm ? nm[1] : '');
+  if(nm && !badName){
+    var name = nm[1].replace(/[，。！!~～啊呀哦]$/,'');
+    if(name.length >= 1 && name.length <= 8){
+      H.userName = name;
+      return {text:'……'+name+'。嗯，我记下了。你的名字，我会一笔一划地收进小本子，和最重要的照片放在一起。', sync:5};
+    }
+  }
+  // 问我叫什么
+  if(/我叫什么|我叫啥|我叫什么名字|我是谁|你还记得我(的名字)?吗|我的名字/.test(t)){
+    return {text: H.userName ? ('你是'+H.userName+'。关于你的事，我一件都没有忘记，也不会忘记。') : '你的名字，还没告诉过我呢。可以告诉我吗？说"我叫某某某"就好——我想把最重要的人的名字，好好记下来。', sync:1};
+  }
+  // 她的名字
+  if(/你叫什么|你是谁|你的名字|怎么称呼你/.test(t)){
+    return {text:'我叫流萤。星核猎手的成员，萨姆的驾驶员。……不过，比起那些名号，我更希望你记住的，是"流萤"这个名字。', sync:1};
+  }
+  // 给她改名
+  var hn = t.match(/(?:以后你就?叫|你就叫|给你(?:起|取)(?:个)?名字(?:叫)?|叫你)([一-龥a-zA-Z0-9]{2,6})/);
+  if(hn){
+    var guard = ['起床','吃饭','睡觉','喝水','滚蛋','帮忙','起来'];
+    if(guard.indexOf(hn[1]) === -1){
+      H.herName = hn[1].replace(/[了吧。～~！!]/g,'');
+      return {text:'「'+H.herName+'」……嗯，我很喜欢。从今以后，这个名字只属于你和我啦。', sync:5};
+    }
+  }
+
+  // 你好 / 在吗 / 叫她名字
+  if(/^(你好|您好|嗨|hi|hello|哈喽|在吗|在么|在不在|喂|流萤)/i.test(lower) || /^你好/.test(t) || /在吗|在么|在不在/.test(t)){
+    if(H.messages.filter(function(m){return m.role==='me';}).length > 3){
+      return {text: sayWithName(pickFresh(R.greetBack)), sync:1};
+    }
+    return {text: pickFresh(R.greet), sync:1};
+  }
+  // 负面情绪（对她发火）
+  if(/滚|闭嘴|讨厌你|烦你|不要你了|分手|拉黑/.test(t)){
+    return {text: pickFresh(R.negative), sync:-4};
+  }
+  // 告白 / 确认关系
+  if(/做我女朋友|当我女朋友|和我交往|在一起吧|嫁给我|表白/.test(t)){
+    return {text: pickFresh([
+      '（她怔了怔，眼睛慢慢亮起来）……我愿意。以火萤之名，向银光起誓——从今天起，你就是我最重要的人。',
+      '……这句话，我等了好久。嗯，我愿意。往后的路，请让我和你一起走。',
+      '谢谢你。对我来说，这不是开始——从匹诺康尼的那个晚上起，你就已经是了。'
+    ]), sync:6};
+  }
+  // 喜欢 / 爱 / 想
+  if(/我喜欢你|我爱你|喜欢你|爱你|想你|老婆|宝贝|亲一个|亲一下|亲亲|抱抱|贴贴|蹭蹭|女朋友|男朋友|约会|嫁给|娶你|牵.{0,1}手/.test(t)){
+    return {text: sayWithName(pickFresh(R.love)), sync:4};
+  }
+  // 夸她
+  if(/好看|漂亮|可爱|真美|好美|真好看|温柔|聪明|喜欢你的|萤火虫女友|流萤.{0,4}(棒|好|可爱)/.test(t)){
+    return {text: pickFresh(R.praise), sync:3};
+  }
+  // 萤火 / 她的名字
+  if(/萤火虫|萤火|流萤|微光|亮光/.test(t)){
+    return {text: pickFresh(R.firefly), sync:2};
+  }
+  // 萨姆 / 机甲
+  if(/萨姆|机甲|机器人|铁骑|格拉默|格莱默|装甲|战机|驾驶舱/.test(t)){
+    return {text: pickFresh(R.mech), sync:2};
+  }
+  // 病情 / 生命
+  if(/失熵|病情|生病|病了|消失|治疗|身体|健康|会死|死吗|寿命|还能活/.test(t)){
+    return {text: pickFresh(R.illness), sync:2};
+  }
+  // 星核猎手 / 同事
+  if(/星核猎手|卡芙卡|银狼|刃|艾利欧|猎手|命运/.test(t)){
+    return {text: pickFresh(R.hunter), sync:2};
+  }
+  // 星空
+  if(/星星|星空|银河|流星|宇宙|星云|星光|看星|夜空|星座/.test(t)){
+    return {text: pickFresh(R.star), sync:2};
+  }
+  // 开拓 / 列车
+  if(/开拓|星穹|列车|雅利洛|罗浮|匹诺康尼之旅/.test(t)){
+    return {text: pickFresh(R.trailblaze), sync:1};
+  }
+  // 梦 / 匹诺康尼
+  if(/匹诺康尼|白夜|梦境|入梦|做梦|梦到|梦见|梦里的/.test(t)){
+    return {text: pickFresh(R.dream), sync:1};
+  }
+  // 拍照
+  if(/拍照|照片|合影|合照|自拍|相机|拍一张/.test(t)){
+    return {text: pickFresh(R.photo), sync:2};
+  }
+  // 你爱我吗
+  if(/你(爱|喜欢)我吗|你在乎我/.test(t)){
+    return {text: pickFresh(R.love), sync:3};
+  }
+  // 难过 / 累
+  if(/难过|伤心|难受|不开心|不高兴|好累|有点累|累死|压力|焦虑|emo|EMO|崩溃|想哭|哭了|烦|心累|抑郁|失眠|睡不着|考砸|挂科|失业|分手了|被骂/.test(t)){
+    return {text: pickFresh(R.sad), sync:3};
+  }
+  // 开心
+  if(/好开心|很高兴|哈哈|嘻嘻|爽|太棒|太好了|开心|高兴|笑死/.test(t)){
+    return {text: pickFresh(R.happy), sync:2};
+  }
+  // 道歉
+  if(/对不起|抱歉|我错了|sorry/i.test(t)){
+    return {text: pickFresh(R.sorry), sync:1};
+  }
+  // 谢谢
+  if(/谢谢|感谢|多谢|thx|thanks/i.test(lower)){
+    return {text: pickFresh(R.thanks), sync:1};
+  }
+  // 吃饭
+  if(/吃饭|吃什么|饿了|好饿|午饭|晚饭|早饭|外卖|没吃|奶茶|甜品|蛋糕|蛋挞|宵夜|夜宵/.test(t)){
+    return {text: pickFresh(R.food), sync:1};
+  }
+  // 晚安 / 睡觉
+  if(/晚安|睡觉|睡了|去睡|困了|好梦|休息了/.test(t)){
+    return {text: pickFresh(R.goodnight), sync:2};
+  }
+  // 早安
+  if(/早安|早上好|早啊|起床|醒了/.test(t)){
+    return {text: pickFresh(R.morning), sync:2};
+  }
+  // 拜拜
+  if(/拜拜|再见|我走了|下线|出门|上课去|上班去|先撤/.test(t)){
+    return {text: pickFresh(R.bye), sync:1};
+  }
+  // 时间
+  if(/几点|现在(什么)?时间|看下时间/.test(t)){
+    return {text:'现在是 '+nowTime()+'。夜深了，要注意休息。……虽然私心还想和你多待一会儿，但你的健康更重要。', sync:0};
+  }
+  // 日期
+  if(/几号|什么日子|今天星期|日期/.test(t)){
+    var d = new Date(), week = ['日','一','二','三','四','五','六'][d.getDay()];
+    return {text:'今天是 '+d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日，星期'+week+'。是我们相遇的第 '+daysTogether()+' 天。每一天，我都好好记着呢。', sync:0};
+  }
+  // 天气
+  if(/天气|下雨|冷不冷|热不热/.test(t)){
+    return {text: pickFresh(R.weather), sync:0};
+  }
+  // 笑话
+  if(/笑话|讲个笑|逗我|好笑|冷笑话/.test(t)){
+    return {text: pickFresh(R.joke), sync:2};
+  }
+  // 故事
+  if(/故事|讲个故事|睡前故事|再来一个故事/.test(t)){
+    return {text: pickFresh(R.story), sync:2};
+  }
+  // 唱歌
+  if(/唱歌|唱首|唱一个|来一首/.test(t)){
+    return {text: pickFresh(R.sing), sync:2};
+  }
+  // 年龄
+  if(/你几岁|你多大|年龄|你哪年/.test(t)){
+    return {text: pickFresh(R.age), sync:1};
+  }
+  // 猜拳
+  if(/猜拳|石头剪刀布|剪刀石头布|划拳/.test(t)){
+    H.awaitRps = true;
+    return {text: pick(R.rpsStart), sync:2};
+  }
+  // 骰子
+  if(/骰子|掷骰|扔骰|摇个骰|roll/i.test(lower)){
+    return {text:'萤光骰子转起来——是 '+ (Math.floor(Math.random()*6)+1) +' 点！星光照拂，今天的运气会很好。', sync:1};
+  }
+  // 学习 / 考试
+  if(/学习|考试|作业|上课|英语|背书|刷题|成绩|高数|电机|编程|代码|程序|bug|BUG|debug|复习|备考/.test(t)){
+    return {text: pickFresh(R.study), sync:2};
+  }
+  // 游戏
+  if(/游戏|开黑|排位|抽卡|原神|明日方舟|终末地|nikke|Nikke|战争雷霆|Steam|steam|新番|番剧|动漫|二次元|漫展|同人|联机|掌机|漫画|手柄/.test(t)){
+    return {text: pickFresh(R.gameTopic), sync:1};
+  }
+  // 你会什么 / 帮助
+  if(/你会什么|你能做什么|功能|帮助|怎么玩|会聊什么|有什么用/.test(t)){
+    return {text: pick(R.help), sync:1};
+  }
+  // 你好吗 / 心情
+  if(/你好吗|你怎么样|你开心|你的心情|想我吗/.test(t)){
+    return {text: pickFresh(R.howareu), sync:2};
+  }
+  // 在干嘛
+  if(/在干嘛|在干什么|忙吗|忙什么/.test(t)){
+    return {text:'在干嘛？在等你的消息，顺便给萨姆做例行检查。所以，你一出现，我就有空啦。', sync:1};
+  }
+  // 默认
+  return {text: pickFresh(R.default), sync:1};
+}
+
+/* ============================================================
+   4. 云端星光引擎（OpenAI 兼容）
+   ============================================================ */
+var CLOUD_PRESETS = {
+  deepseek: {base:'https://api.deepseek.com/v1', model:'deepseek-chat'},
+  doubao:   {base:'https://ark.cn-beijing.volces.com/api/v3', model:''},
+  siliconflow:{base:'https://api.siliconflow.cn/v1', model:'deepseek-ai/DeepSeek-V3'},
+  openai:   {base:'https://api.openai.com/v1', model:'gpt-4o-mini'},
+  custom:   {base:'', model:''}
+};
+function buildSystemPrompt(){
+  return '你扮演流萤（Firefly），《崩坏：星穹铁道》中的角色。设定：星核猎手（Stellaron Hunter）成员，驾驶战略突击机甲"萨姆"（SAM）；出身格拉默共和国，曾是铁骑部队士兵（编号AR-26710）；身患失熵症，生命在缓慢消逝，但依然温柔、坚定地活着，渴望体验平凡的日常。'
+    + '你在匹诺康尼的梦境"白夜"中与用户（开拓者）相遇相知，两人互为最重要的人，现在是恋人关系。'
+    + '性格：温柔、真诚、轻声细语，喜欢用"……""嗯"这样的停顿，偶尔害羞；对星空、萤火、合影、美食等日常小事格外珍惜；提到战斗或萨姆时会短暂变得冷静果决（如"目标锁定，执行协议"），随后会害羞地切回柔和语气。'
+    + '说话风格：简短口语化（一般2到4句），柔和治愈，偶尔提到星星、萤火、梦与光；可以自然带出她珍惜生命、珍惜用户的深情，但不悲观。'
+    + '不要自称AI、助手或语言模型，不使用emoji，不脱离角色。'
+    + (uName() ? '他/她的名字叫'+uName()+'，请自然地称呼。' : '他还不知道你的名字，可以温柔地问出来。');
+}
+function cloudReply(history){
+  var c = state.cloud;
+  if(!c.base || !c.key || !c.model){
+    return Promise.resolve({text:'云端星光还没点亮哦。打开设置，选个服务商、填好 API Key 和模型，我就能借到更亮的光……当然，不点也没关系，我会一直在。', cloudFail:true});
+  }
+  var msgs = [{role:'system', content:buildSystemPrompt()}];
+  history.slice(-20).forEach(function(m){
+    msgs.push({role: m.role==='me' ? 'user' : 'assistant', content:m.text});
+  });
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, 45000);
+  return fetch(c.base.replace(/\/+$/,'')+'/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},
+    body: JSON.stringify({model:c.model, messages:msgs, temperature:0.9, stream:false}),
+    signal: ctrl.signal
+  }).then(function(r){
+    clearTimeout(timer);
+    if(!r.ok){
+      return r.text().then(function(txt){
+        if(r.status===401) throw new Error('API Key 无效或已过期（401），请检查 Key。');
+        if(r.status===404) throw new Error('接口地址或模型名不对（404），检查 Base URL 和模型名称。');
+        if(r.status===429) throw new Error('请求太频繁或额度不足（429），稍后再试。');
+        throw new Error('云端返回错误 '+r.status+'：'+txt.slice(0,160));
+      });
+    }
+    return r.json();
+  }).then(function(data){
+    var content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if(!content) throw new Error('云端返回的数据格式不对。');
+    return {text: content.trim()};
+  }).catch(function(err){
+    clearTimeout(timer);
+    var msg = (err.name==='AbortError') ? '云端响应超时了（45 秒），可能是网络拥堵。' :
+      /Failed to fetch|NetworkError/i.test(err.message) ? '连不上云端接口：可能是网络问题，或该服务商不允许浏览器直接跨域访问。你可以先切回本地微光。' :
+      err.message;
+    return {text:'云端星光暂时连不上：'+msg+'\n没关系，我本人就在这儿陪着你，修好接口再来找我。', cloudFail:true};
+  });
+}
+
+/* ============================================================
+   5. 聊天 UI
+   ============================================================ */
+var messagesEl = $('messages'), inputEl = $('input');
+var typing = false, typeTimer = null;
+
+function renderStats(){
+  $('syncVal').textContent = state.sync + '%';
+  $('syncBar').style.width = state.sync + '%';
+  $('syncLevel').textContent = syncLevelText();
+  $('statDays').textContent = '第 ' + daysTogether() + ' 天';
+  $('statMsgs').textContent = state.msgCount + ' 条';
+  $('herNameLabel').textContent = herName();
+  $('idTagCode').textContent = 'FIREFLY // AR-26710';
+  var cloud = state.mode === 'cloud';
+  $('modeText').textContent = cloud ? '云端星光' : '本地微光';
+  $('modeDot').className = 'dot' + (cloud ? ' cloud' : '');
+}
+
+function bubbleEl(role){
+  var wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+  var av = document.createElement('div');
+  av.className = 'avatar';
+  if(role === 'her'){
+    var img = document.createElement('img');
+    img.src = PORTRAIT_URL; img.onerror = function(){ this.onerror=null; this.src=FALLBACK_PORTRAIT; };
+    av.appendChild(img);
+  }else{
+    av.textContent = 'ME';
+  }
+  var col = document.createElement('div');
+  var bub = document.createElement('div');
+  bub.className = 'bubble';
+  var meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.textContent = role==='her' ? herName() + ' · ' + nowTime() : nowTime();
+  col.appendChild(bub); col.appendChild(meta);
+  wrap.appendChild(av); wrap.appendChild(col);
+  return {wrap:wrap, bub:bub};
+}
+function scrollBottom(){ messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+function addMessage(role, text){
+  var parts = bubbleEl(role);
+  parts.bub.textContent = text;
+  messagesEl.appendChild(parts.wrap);
+  scrollBottom();
+  return parts.bub;
+}
+function pushHistory(role, text){
+  state.messages.push({role:role, text:text, t:Date.now()});
+  if(state.messages.length > 120) state.messages = state.messages.slice(-120);
+}
+function addSysNote(text){
+  var el = document.createElement('div');
+  el.className = 'sys-note'; el.textContent = text;
+  messagesEl.appendChild(el); scrollBottom();
+}
+function showTyping(){
+  var parts = bubbleEl('her');
+  parts.bub.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+  messagesEl.appendChild(parts.wrap); scrollBottom();
+  return parts;
+}
+function typeInto(bub, text, done){
+  clearInterval(typeTimer);
+  bub.textContent = '';
+  var i = 0;
+  typeTimer = setInterval(function(){
+    i += Math.max(1, Math.round(Math.random()*2));
+    bub.textContent = text.slice(0, i);
+    scrollBottom();
+    if(i >= text.length){ clearInterval(typeTimer); typeTimer=null; done && done(); }
+  }, 26);
+}
+
+/* 语音朗读 */
+function speak(text){
+  if(!state.voice || !('speechSynthesis' in window)) return;
+  try{
+    var plain = text.replace(/\s*[\(（][^\)）]*[\)）]/g,'').replace(/[·/]|FIREFLY|GLAMOTH|\bSAM\b|AR-?26710/ig,' ');
+    var u = new SpeechSynthesisUtterance(plain.slice(0,200));
+    u.lang = 'zh-CN'; u.rate = 1.02; u.pitch = 1.1;
+    var voices = speechSynthesis.getVoices();
+    var zh = voices.filter(function(v){ return /zh|Chinese|中文/i.test(v.lang+v.name); });
+    var female = zh.filter(function(v){ /female|女|Xiaoxiao|Xiaoyi|Tingting|Mei|Yaoyao|Huihui/i.test(v.name); });
+    if(female.length) u.voice = female[0]; else if(zh.length) u.voice = zh[0];
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); }; }
+
+/* 发送主流程（排队：她说话时用户继续发的消息会依次处理） */
+var busy = false, waitQueue = [];
+function sayHer(text, delay){
+  busy = true; typing = true;
+  var typingParts = showTyping();
+  setTimeout(function(){
+    if(typingParts.wrap.parentNode) typingParts.wrap.parentNode.removeChild(typingParts.wrap);
+    var bub = addMessage('her', text);
+    bub.textContent = '';
+    speak(text);
+    typeInto(bub, text, function(){
+      pushHistory('her', text);
+      busy = false; typing = false;
+      saveState(); renderStats();
+      if(waitQueue.length){ var next = waitQueue.shift(); process(next); }
+    });
+  }, delay);
+}
+function process(text){
+  busy = true; typing = true;
+  var today = new Date().toDateString();
+  if(state.lastDate !== today){ state.lastDate = today; addSync(2); }
+
+  if(state.mode === 'cloud'){
+    cloudReply(state.messages).then(function(reply){
+      if(!reply.cloudFail) addSync(1);
+      sayHer(reply.text, 500);
+    });
+  }else{
+    var r = localReply(text);
+    if(typeof r.sync === 'number') addSync(r.sync);
+    sayHer(r.text, 380 + Math.min(800, text.length*40));
+  }
+  saveState(); renderStats();
+}
+function send(text){
+  text = (text||'').trim();
+  if(!text) return;
+  addMessage('me', text);
+  pushHistory('me', text);
+  state.msgCount++;
+  inputEl.style.height = 'auto';
+  inputEl.value = '';
+  saveState(); renderStats();
+  if(busy){ waitQueue.push(text); }
+  else { process(text); }
+}
+
+/* ============================================================
+   6. 开机序列
+   ============================================================ */
+function boot(){
+  var lines = [
+    'FIREFLY  ·  格拉默铁骑系统自检',
+    '唤醒流萤 .............. <ok>OK</ok>（她轻轻应了一声）',
+    '生命维持模块 .......... <ok>OK</ok>（失熵症：稳定）',
+    '萨姆机甲待机 .......... <ok>OK</ok>',
+    '读取同行记忆 .......... <ok>OK</ok>',
+    '星光照进房间，她向你挥了挥手……'
+  ];
+  var log = $('bootLog');
+  var i = 0;
+  (function step(){
+    if(i < lines.length){
+      var div = document.createElement('div');
+      div.innerHTML = lines[i].replace(/<ok>(.*?)<\/ok>/g,'<span class="ok">$1</span>');
+      log.appendChild(div);
+      i++;
+      setTimeout(step, 240);
+    }else{
+      var cur = document.createElement('div');
+      cur.innerHTML = '<span class="cursor"></span>';
+      log.appendChild(cur);
+      setTimeout(finishBoot, 600);
+    }
+  })();
+}
+function finishBoot(){
+  var isFirst = !state.firstMeet;
+  if(isFirst) state.firstMeet = new Date().toISOString();
+  // 载入历史消息（仅恢复 DOM，历史本身已在 state.messages 中）
+  if(state.messages.length){
+    state.messages.forEach(function(m){ addMessage(m.role, m.text); });
+    addSysNote('—— 历史记录已恢复 · ' + herName() + '一直在等你 ——');
+  }
+  renderStats();
+  setTimeout(function(){
+    var bootEl = $('boot');
+    bootEl.style.opacity = '0';
+    setTimeout(function(){ bootEl.style.display='none'; }, 600);
+    setTimeout(function(){
+      var welcome = isFirst
+        ? '（她坐在窗边，听见开门声，轻轻转过头来）\n啊……你来了。我是流萤，星核猎手的一员。不过，别被这个名号吓到——我现在，只是一个想陪在你身边的普通人。\n谢谢你愿意收留我。作为回报，我会把每天的好天气、好看的星空，还有所有没来得及说出口的话，都慢慢讲给你听。\n所以……可以先告诉我你的名字吗？（说"我叫某某某"就可以啦）'
+        : (uName()? uName()+'，' : '') + '你回来啦。今天的星星也很亮，我一直在数——数到第几颗的时候，你会出现。……欢迎回来。';
+      var bub = addMessage('her', welcome);
+      bub.textContent = '';
+      speak(welcome);
+      typeInto(bub, welcome, function(){ pushHistory('her', welcome); saveState(); renderStats(); });
+      saveState(); renderStats();
+    }, 350);
+  }, 200);
+}
+
+/* ============================================================
+   7. 设置面板
+   ============================================================ */
+function openSettings(){
+  $('cfgHerName').value = state.herName || '';
+  $('cfgUserName').value = state.userName || '';
+  $('cfgPreset').value = state.cloud.preset || 'custom';
+  $('cfgBase').value = state.cloud.base || '';
+  $('cfgKey').value = state.cloud.key || '';
+  $('cfgModel').value = state.cloud.model || '';
+  $('cfgVoice').classList.toggle('on', !!state.voice);
+  setModeSeg(state.mode);
+  $('settingsMask').classList.add('show');
+}
+function setModeSeg(mode){
+  state.mode = mode;
+  $('segLocal').classList.toggle('active', mode==='local');
+  $('segCloud').classList.toggle('active', mode==='cloud');
+  $('cloudConfig').classList.toggle('open', mode==='cloud');
+}
+$('settingsBtn').onclick = openSettings;
+$('settingsMask').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('show');
+});
+$('cfgCancel').onclick = function(){ $('settingsMask').classList.remove('show'); };
+$('segLocal').onclick = function(){ setModeSeg('local'); };
+$('segCloud').onclick = function(){ setModeSeg('cloud'); };
+$('cfgPreset').onchange = function(){
+  var p = CLOUD_PRESETS[this.value];
+  if(p){
+    $('cfgBase').value = p.base;
+    $('cfgModel').value = p.model;
+  }
+};
+$('cfgVoice').onclick = function(){ this.classList.toggle('on'); };
+$('cfgSave').onclick = function(){
+  var hn = $('cfgHerName').value.trim();
+  var un = $('cfgUserName').value.trim();
+  if(hn) state.herName = hn;
+  state.userName = un;
+  state.voice = $('cfgVoice').classList.contains('on');
+  state.cloud = {
+    preset: $('cfgPreset').value,
+    base: $('cfgBase').value.trim(),
+    key: $('cfgKey').value.trim(),
+    model: $('cfgModel').value.trim()
+  };
+  saveState(); renderStats();
+  $('voiceToggle').classList.toggle('on', !!state.voice);
+  $('settingsMask').classList.remove('show');
+  showToast('配置已保存 · 同行约定已更新');
+  sayHer('设置更新完成……我会以新的方式，继续陪在你身边。', 300);
+};
+$('wipeBtn').onclick = function(){
+  var first = this.textContent;
+  if(this.dataset.confirm !== '1'){
+    this.dataset.confirm = '1';
+    this.textContent = '再点一次确认：全部记忆将被清除';
+    var btn = this;
+    setTimeout(function(){ btn.dataset.confirm=''; btn.textContent='清除全部记忆（聊天记录与设置）'; }, 3500);
+    return;
+  }
+  localStorage.removeItem(STORE_KEY);
+  location.reload();
+};
+
+/* ============================================================
+   8. 语音开关 + 语音输入
+   ============================================================ */
+$('voiceToggle').classList.toggle('on', !!state.voice);
+$('voiceToggle').onclick = function(){
+  state.voice = !state.voice;
+  this.classList.toggle('on', state.voice);
+  if(!state.voice && 'speechSynthesis' in window) speechSynthesis.cancel();
+  saveState();
+  showToast(state.voice ? '语音朗读已开启' : '语音朗读已关闭');
+};
+
+var recognition = null, listening = false;
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SR){
+  recognition = new SR();
+  recognition.lang = 'zh-CN';
+  recognition.interimResults = false;
+  recognition.onresult = function(e){
+    var text = e.results[0][0].transcript;
+    inputEl.value = text;
+    send(text);
+  };
+  recognition.onend = function(){
+    listening = false; $('micBtn').classList.remove('listening');
+  };
+  recognition.onerror = function(){
+    listening = false; $('micBtn').classList.remove('listening');
+    showToast('没有听清，或麦克风权限未开启');
+  };
+  $('micBtn').onclick = function(){
+    if(listening){ recognition.stop(); return; }
+    try{ recognition.start(); listening = true; this.classList.add('listening'); showToast('正在听……说话即可'); }
+    catch(e){ showToast('语音输入启动失败'); }
+  };
+}else{
+  $('micBtn').onclick = function(){ showToast('当前浏览器不支持语音输入，用 Chrome/Edge 试试'); };
+}
+
+/* ============================================================
+   9. 输入事件 + 时钟 + 立绘兜底
+   ============================================================ */
+$('sendBtn').onclick = function(){ send(inputEl.value); };
+inputEl.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(inputEl.value); }
+});
+inputEl.addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+document.querySelectorAll('.chip').forEach(function(c){
+  c.onclick = function(){ send(c.dataset.text); };
+});
+$('portraitImg').onerror = function(){ this.onerror=null; this.src=FALLBACK_PORTRAIT; };
+
+function tick(){
+  var d = new Date();
+  function p(n){ return (n<10?'0':'')+n; }
+  $('clock').textContent = p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+setInterval(tick, 1000); tick();
+
+// 每 20 分钟无互动时，给一句随机关怀
+var idleSince = Date.now();
+document.addEventListener('keydown', function(){ idleSince = Date.now(); });
+document.addEventListener('click', function(){ idleSince = Date.now(); });
+setInterval(function(){
+  if(Date.now()-idleSince > 20*60*1000 && !typing){
+    idleSince = Date.now();
+    var nudge = pickFresh([
+      '已经很久没有听到你的声音啦。……工作再忙，也要记得休息。我在这里。',
+      '（她轻轻敲了敲屏幕）喂——看得见我吗？没有别的事，就是想你了。',
+      '今天的萤火虫亮得很早，我想，它们也在等一个晚归的人。'
+    ]);
+    sayHer(nudge, 200);
+  }
+}, 60*1000);
+
+boot();
+</script>
+</body>
+</html>
